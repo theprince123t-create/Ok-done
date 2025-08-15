@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Overlay Patti • CricHeroes</title>
+<style>
+  :root{
+    --bg: rgba(18,42,92,0.65);   /* semi-transparent dark blue */
+    --text: #ffffff;
+    --muted: #d8e2ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:transparent;color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .overlay{
+    position:fixed;left:0;right:0;bottom:0;
+    padding:10px 18px;background:var(--bg);backdrop-filter:blur(6px);
+  }
+  .bar{display:grid;grid-template-columns:2fr 1.2fr 1.4fr 1.2fr;gap:12px;align-items:center}
+  .panel{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 14px;border-radius:18px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.05));
+    border:1px solid rgba(255,255,255,0.12);min-height:56px
+  }
+  .p-l{justify-content:flex-start}
+  .title{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .score{font-weight:800;font-size:22px;letter-spacing:.5px}
+  .right{text-align:right}
+  .sub{font-size:12px;color:var(--muted)}
+  .balls{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+  .ball{
+    width:18px;height:18px;border-radius:50%;
+    display:grid;place-items:center;background:#FFF;color:#001a33;
+    font-weight:800;font-size:12px;line-height:18px;
+    box-shadow:0 0 0 3px rgba(255,255,255,0.18) inset,0 2px 8px rgba(0,0,0,0.35)
+  }
+  .ball.run{background:#7CDA7A;color:#0b2b0e}
+  .ball.wicket{background:#ff6b6b;color:#330000}
+  @media (max-width:1000px){ .bar{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="bar">
+      <!-- Left: Batsmen -->
+      <div class="panel p-l">
+        <div>
+          <div class="title" id="bat1">Batter 1 0(0)</div>
+          <div class="title" id="bat2">Batter 2 0(0)</div>
+          <div class="sub" id="bowlerMobile" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Mid: RR / Score / CRR -->
+      <div class="panel">
+        <div class="title">RR</div>
+        <div class="score" id="score">0-0 (0.0)</div>
+        <div class="title right">CRR: <span id="crr">0.00</span></div>
+      </div>
+
+      <!-- Bowler -->
+      <div class="panel">
+        <div class="title">LM</div>
+        <div class="title" id="bowler">Bowler 0-0 (0)</div>
+      </div>
+
+      <!-- Recent balls -->
+      <div class="panel">
+        <div class="balls" id="recentBalls">
+          <div class="ball"></div><div class="ball"></div><div class="ball"></div>
+          <div class="ball"></div><div class="ball"></div><div class="ball"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Frontend polling every 3s
+  function classifyBall(sym){
+    if(!sym) return "";
+    if(sym.toUpperCase()==="W") return "wicket";
+    if(/^[1-6]$/.test(sym)) return "run";
+    return ""; // dot/others = white
+  }
+
+  async function pull(){
+    try{
+      const res = await fetch("/api/score", { cache: "no-store" });
+      if(!res.ok) return;
+      const d = await res.json();
+
+      document.getElementById('bat1').textContent = d.batsman1;
+      document.getElementById('bat2').textContent = d.batsman2;
+      document.getElementById('score').textContent = d.score;
+      document.getElementById('crr').textContent   = d.crr;
+      document.getElementById('bowler').textContent= d.bowler;
+
+      const rb = document.getElementById('recentBalls');
+      rb.innerHTML = "";
+      (d.balls || []).slice(-6).forEach(sym=>{
+        const el = document.createElement('div');
+        el.className = 'ball';
+        const cls = classifyBall(sym);
+        if(cls) el.classList.add(cls);
+        el.textContent = (sym==="."? "" : sym);
+        rb.appendChild(el);
+      });
+
+      // On narrow screens also show bowler below batsmen
+      document.getElementById('bowlerMobile').textContent = `LM: ${d.bowler}`;
+    }catch(e){
+      // keep silent to avoid flicker
+    }
+  }
+  setInterval(pull, 3000);
+  pull();
+</script>
+</body>
+</html>
