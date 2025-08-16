@@ -1,27 +1,33 @@
-async function loadScore() {
+async function loadOverlay() {
   try {
-    const res = await fetch("/api/score");
-    if (!res.ok) throw new Error("Network Error");
+    const res = await fetch("/api/overlay");
     const data = await res.json();
 
-    const sb = data.batsmen.sb;
-    const nsb = data.batsmen.nsb;
-    const bow = data.bowlers.sb;
+    // Batsmen
+    if (data.batsmen[0]) {
+      document.getElementById("batsman1").textContent =
+        `${data.batsmen[0].name} ${data.batsmen[0].runs} (${data.batsmen[0].balls})`;
+    }
+    if (data.batsmen[1]) {
+      document.getElementById("batsman2").textContent =
+        `${data.batsmen[1].name} ${data.batsmen[1].runs} (${data.batsmen[1].balls})`;
+    }
 
-    document.getElementById("batsmen").innerText =
-      `${sb.name} ${sb.runs}(${sb.balls}) & ${nsb.name} ${nsb.runs}(${nsb.balls})`;
+    // Team Score
+    document.getElementById("teamScore").textContent =
+      `${data.teams.batting.name} ${data.teams.batting.runs}-${data.teams.batting.wickets} (${data.teams.batting.overs} ov) | CRR: ${data.teams.batting.rr}`;
 
-    document.getElementById("score").innerText = data.team_a.summary;
-
-    document.getElementById("crr").innerText = `CRR ${data.last5_over.runrate}`;
-
-    document.getElementById("bowler").innerText =
-      `${bow.name} ${bow.overs}ov • ${bow.runs}/${bow.wickets}`;
-  } catch (err) {
-    console.error(err);
-    document.getElementById("score").innerText = "Error loading score";
+    // Bowler
+    if (data.bowler) {
+      document.getElementById("bowler").textContent =
+        `${data.bowler.name} ${data.bowler.runs}-${data.bowler.wickets} (${data.bowler.overs})`;
+    }
+  } catch (e) {
+    console.error("Error fetching overlay:", e);
+    document.getElementById("teamScore").textContent = "Error loading score";
   }
 }
 
-loadScore();
-setInterval(loadScore, 10000);
+// Auto refresh every 5 sec
+setInterval(loadOverlay, 5000);
+loadOverlay();
