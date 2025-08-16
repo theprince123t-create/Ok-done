@@ -1,28 +1,38 @@
-import express from "express";
-import fetch from "node-fetch";
+const express = require("express");
+const fetch = require("node-fetch");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
+
 const PORT = process.env.PORT || 10000;
 
-// CricHeroes ka live JSON API URL
+// CricHeroes JSON URL
 const API_URL = "https://cricheroes.com/_next/data/GWn-9wsDkpg5k-2hvyhaR/scorecard/18754689/individual/jaajssi-vs-jeejej/live.json";
 
-// Static files (index.html, script.js etc)
-app.use(express.static("public"));
+// Root route
+app.get("/", (req, res) => {
+  res.send("✅ Live Cricket Score API is running! Go to /api/score");
+});
 
-// API route jo frontend ke liye proxy karega
+// Score API
 app.get("/api/score", async (req, res) => {
   try {
     const response = await fetch(API_URL);
     const data = await response.json();
     res.json(data);
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ error: "Failed to fetch data" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch score" });
   }
 });
 
-// Server start
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ notFound: true });
+});
+
+// Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
