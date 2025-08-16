@@ -1,54 +1,27 @@
 const express = require("express");
 const fetch = require("node-fetch");
+const cors = require("cors");
 const path = require("path");
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors()); // ✅ CORS allow
 
-// Static files
-app.use(express.static("public"));
+// Serve static frontend files (index.html, script.js etc.)
+app.use(express.static(path.join(__dirname, "public")));
 
-// Simple no-cache (live feel)
-app.use((req, res, next) => {
-  res.set("Cache-Control", "no-store");
-  next();
-});
-
-// Score API: /api/score?id=...&slug=...
+// API endpoint
 app.get("/api/score", async (req, res) => {
   try {
-    const { id, slug } = req.query;
-
-    // Defaults (optional): agar query na ho to aapka sample match chale
-    const matchId = id || "18754689";
-    const matchSlug = slug || "jaajssi-vs-jeejej";
-
-    const url = `https://cricheroes.com/_next/data/GWn-9wsDkpg5k-2hvyhaR/scorecard/${matchId}/individual/${matchSlug}/live.json`;
-
-    const response = await fetch(url, {
-      headers: {
-        // kuch hosts referer/user-agent par strict hote hain
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: `Upstream ${response.status}` });
-    }
-
-    const data = await response.json();
+    // 👇 yaha tum apna match id change kar sakte ho
+    let response = await fetch("https://cricheroes.in/api/v1/match/18754689");
+    let data = await response.json();
     res.json(data);
-  } catch (error) {
-    console.error("API error:", error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to fetch score" });
   }
 });
 
-// Fallback: SPA style
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`✅ Server running on port ${port}`));
