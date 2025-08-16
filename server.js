@@ -1,20 +1,19 @@
 const express = require("express");
 const fetch = require("node-fetch");
-const path = require("path");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Example API call (replace with real CricHeroes API link)
 app.get("/api/score", async (req, res) => {
   try {
-    const raw = await fetch("https://example.com/score.json"); 
+    const raw = await fetch("https://cricheroes.com/_next/data/GWn-9wsDkpg5k-2hvyhaR/scorecard/18754689/individual/jaajssi-vs-jeejej/live.json");
     const data = await raw.json();
-    res.json(data);
+    res.json(data.pageProps.miniScorecard.data);
   } catch (err) {
-    console.error("Error fetching score:", err);
+    console.error("API error:", err);
     res.status(500).json({ error: "Failed to fetch score" });
   }
 });
