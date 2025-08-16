@@ -1,26 +1,28 @@
 async function loadScore() {
   try {
-    let response = await fetch("/api/score");
-    if (!response.ok) throw new Error("Network response was not ok");
+    const res = await fetch("/api/score");
+    const data = await res.json();
 
-    let data = await response.json();
+    // Example structure (replace according to real API response)
+    const batsman1 = data.batsmen?.[0] || { name: "Batsman1", runs: 0, balls: 0 };
+    const batsman2 = data.batsmen?.[1] || { name: "Batsman2", runs: 0, balls: 0 };
+    const bowler = data.bowler || { name: "Bowler", overs: "0.0", runs: 0, wickets: 0 };
+    const score = data.score || "0-0 (0)";
 
-    // 👇 ye part data ka structure dekh kar adjust karna padega
-    // Example ke liye main team name aur score dikha raha hoon
-    let team1 = data?.matchHeader?.team1?.teamSName || "Team A";
-    let team2 = data?.matchHeader?.team2?.teamSName || "Team B";
-    let score = data?.status || "No score available";
+    document.getElementById("batsmen").innerText =
+      `${batsman1.name} ${batsman1.runs}(${batsman1.balls}), ` +
+      `${batsman2.name} ${batsman2.runs}(${batsman2.balls})`;
 
-    document.getElementById("score").innerHTML = `
-      <h2>${team1} vs ${team2}</h2>
-      <p>${score}</p>
-    `;
+    document.getElementById("score").innerText = score;
+
+    document.getElementById("bowler").innerText =
+      `${bowler.name} ${bowler.overs} overs, ${bowler.runs} runs, ${bowler.wickets} wkts`;
+
   } catch (err) {
     console.error(err);
-    document.getElementById("score").innerHTML = "<p class='error'>Error loading score</p>";
+    document.getElementById("score").innerText = "Error loading score";
   }
 }
 
-// refresh har 15s me
 loadScore();
-setInterval(loadScore, 15000);
+setInterval(loadScore, 10000);
