@@ -1,27 +1,23 @@
 const express = require("express");
 const fetch = require("node-fetch");
-const cors = require("cors");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
-app.use(cors()); // ✅ CORS allow
-
-// Serve static frontend files (index.html, script.js etc.)
+app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
-// API endpoint
+// Example API call (replace with real CricHeroes API link)
 app.get("/api/score", async (req, res) => {
   try {
-    // 👇 yaha tum apna match id change kar sakte ho
-    let response = await fetch("https://cricheroes.in/api/v1/match/18754689");
-    let data = await response.json();
+    const raw = await fetch("https://example.com/score.json"); 
+    const data = await raw.json();
     res.json(data);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching score:", err);
     res.status(500).json({ error: "Failed to fetch score" });
   }
 });
 
-// Start server
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`✅ Server running on port ${port}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
